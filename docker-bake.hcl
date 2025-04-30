@@ -25,8 +25,6 @@ target "_common_multi_platforms" {
 
 target "_common_tags" {
   tags = [
-    "nperez0111/immich-backup:latest",
-    "nperez0111/immich-backup:${VERSION}",
     "ghcr.io/nperez0111/immich-backup:latest",
     "ghcr.io/nperez0111/immich-backup:${VERSION}"
   ]
