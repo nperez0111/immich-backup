@@ -40,32 +40,20 @@ if [[ "$1" == "ping" ]]; then
     exit 0
 fi
 
-# restore
-if [[ "$1" == "restore" ]]; then
-    . /app/restore.sh
-
-    shift
-    restore $*
-
-    exit 0
-fi
-
 function configure_timezone() {
     ln -sf "/usr/share/zoneinfo/${TIMEZONE}" "${LOCALTIME_FILE}"
 }
 
 function configure_cron() {
-    local FIND_CRON_COUNT="$(grep -c 'backup.sh' "${CRON_CONFIG_FILE}" 2> /dev/null)"
+    local FIND_CRON_COUNT="$(grep -c 'backup.sh' "${CRON_CONFIG_FILE}" 2>/dev/null)"
     if [[ "${FIND_CRON_COUNT}" -eq 0 ]]; then
-        echo "${CRON} bash /app/backup.sh" >> "${CRON_CONFIG_FILE}"
+        echo "${CRON} bash /app/backup.sh" >>"${CRON_CONFIG_FILE}"
     fi
 }
 
 init_env
 check_rclone_connection all
 configure_postgresql
-configure_timezone
-configure_cron
 
 # backup manually
 if [[ "$1" == "backup" ]]; then
@@ -75,6 +63,22 @@ if [[ "$1" == "backup" ]]; then
 
     exit 0
 fi
+
+# restore
+if [[ "$1" == "restore" ]]; then
+    color yellow "Manually triggering a restore will only execute the restore script once, and the container will exit upon completion."
+
+    . /app/restore.sh
+
+    # shift
+    # restore $*
+    immich_restore
+
+    exit 0
+fi
+
+configure_timezone
+configure_cron
 
 # foreground run crond
 exec /usr/bin/supercronic -passthrough-logs -quiet "${CRON_CONFIG_FILE}"

@@ -2,9 +2,9 @@
 
 ENV_FILE="/.env"
 CRON_CONFIG_FILE="${HOME}/crontabs"
-BACKUP_DIR="/bitwarden/backup"
-RESTORE_DIR="/bitwarden/restore"
-RESTORE_EXTRACT_DIR="/bitwarden/extract"
+BACKUP_DIR="/immich/backup"
+RESTORE_DIR="/immich/restore"
+RESTORE_EXTRACT_DIR="/immich/extract"
 
 #################### Function ####################
 ########################################
@@ -17,11 +17,11 @@ RESTORE_EXTRACT_DIR="/bitwarden/extract"
 ########################################
 function color() {
     case $1 in
-        red)     echo -e "\033[31m$2\033[0m" ;;
-        green)   echo -e "\033[32m$2\033[0m" ;;
-        yellow)  echo -e "\033[33m$2\033[0m" ;;
-        blue)    echo -e "\033[34m$2\033[0m" ;;
-        none)    echo "$2" ;;
+    red) echo -e "\033[31m$2\033[0m" ;;
+    green) echo -e "\033[32m$2\033[0m" ;;
+    yellow) echo -e "\033[33m$2\033[0m" ;;
+    blue) echo -e "\033[34m$2\033[0m" ;;
+    none) echo "$2" ;;
     esac
 }
 
@@ -32,7 +32,7 @@ function color() {
 ########################################
 function check_rclone_connection() {
     # check if the configuration exists
-    rclone ${RCLONE_GLOBAL_FLAG} config show "${RCLONE_REMOTE_NAME}" > /dev/null 2>&1
+    rclone ${RCLONE_GLOBAL_FLAG} config show "${RCLONE_REMOTE_NAME}" >/dev/null 2>&1
     if [[ $? != 0 ]]; then
         color red "rclone configuration information not found"
         color blue "Please configure rclone first, check https://github.com/ttionya/vaultwarden-backup/blob/master/README.md#backup"
@@ -42,9 +42,8 @@ function check_rclone_connection() {
     # check connection
     local ERROR_COUNT=0
 
-    for RCLONE_REMOTE_X in "${RCLONE_REMOTE_LIST[@]}"
-    do
-        rclone ${RCLONE_GLOBAL_FLAG} lsd "${RCLONE_REMOTE_X}" > /dev/null
+    for RCLONE_REMOTE_X in "${RCLONE_REMOTE_LIST[@]}"; do
+        rclone ${RCLONE_GLOBAL_FLAG} lsd "${RCLONE_REMOTE_X}" >/dev/null
         if [[ $? != 0 ]]; then
             color red "storage system connection failure $(color yellow "[${RCLONE_REMOTE_X}]")"
 
@@ -126,11 +125,11 @@ function send_ping() {
     local CURL_OPTIONS=""
 
     case "$1" in
-        completion) CURL_URL="${PING_URL}" CURL_OPTIONS="${PING_URL_CURL_OPTIONS}" ;;
-        start)      CURL_URL="${PING_URL_WHEN_START}" CURL_OPTIONS="${PING_URL_WHEN_START_CURL_OPTIONS}" ;;
-        success)    CURL_URL="${PING_URL_WHEN_SUCCESS}" CURL_OPTIONS="${PING_URL_WHEN_SUCCESS_CURL_OPTIONS}" ;;
-        failure)    CURL_URL="${PING_URL_WHEN_FAILURE}" CURL_OPTIONS="${PING_URL_WHEN_FAILURE_CURL_OPTIONS}" ;;
-        *)          color red "illegal identifier, only supports completion, start, success, failure" ;;
+    completion) CURL_URL="${PING_URL}" CURL_OPTIONS="${PING_URL_CURL_OPTIONS}" ;;
+    start) CURL_URL="${PING_URL_WHEN_START}" CURL_OPTIONS="${PING_URL_WHEN_START_CURL_OPTIONS}" ;;
+    success) CURL_URL="${PING_URL_WHEN_SUCCESS}" CURL_OPTIONS="${PING_URL_WHEN_SUCCESS_CURL_OPTIONS}" ;;
+    failure) CURL_URL="${PING_URL_WHEN_FAILURE}" CURL_OPTIONS="${PING_URL_WHEN_FAILURE_CURL_OPTIONS}" ;;
+    *) color red "illegal identifier, only supports completion, start, success, failure" ;;
     esac
 
     if [[ -z "${CURL_URL}" ]]; then
@@ -168,28 +167,28 @@ function send_notification() {
     local SUBJECT_FAILURE="${DISPLAY_NAME} Backup Failed"
 
     case "$1" in
-        start)
-            # ping
-            send_ping "start" "${SUBJECT_START}" "$2"
-            ;;
-        success)
-            # mail
-            if [[ "${MAIL_SMTP_ENABLE}" == "TRUE" && "${MAIL_WHEN_SUCCESS}" == "TRUE" ]]; then
-                send_mail "${SUBJECT_SUCCESS}" "$2"
-            fi
-            # ping
-            send_ping "success" "${SUBJECT_SUCCESS}" "$2"
-            send_ping "completion" "${SUBJECT_SUCCESS}" "$2"
-            ;;
-        failure)
-            # mail
-            if [[ "${MAIL_SMTP_ENABLE}" == "TRUE" && "${MAIL_WHEN_FAILURE}" == "TRUE" ]]; then
-                send_mail "${SUBJECT_FAILURE}" "$2"
-            fi
-            # ping
-            send_ping "failure" "${SUBJECT_FAILURE}" "$2"
-            send_ping "completion" "${SUBJECT_FAILURE}" "$2"
-            ;;
+    start)
+        # ping
+        send_ping "start" "${SUBJECT_START}" "$2"
+        ;;
+    success)
+        # mail
+        if [[ "${MAIL_SMTP_ENABLE}" == "TRUE" && "${MAIL_WHEN_SUCCESS}" == "TRUE" ]]; then
+            send_mail "${SUBJECT_SUCCESS}" "$2"
+        fi
+        # ping
+        send_ping "success" "${SUBJECT_SUCCESS}" "$2"
+        send_ping "completion" "${SUBJECT_SUCCESS}" "$2"
+        ;;
+    failure)
+        # mail
+        if [[ "${MAIL_SMTP_ENABLE}" == "TRUE" && "${MAIL_WHEN_FAILURE}" == "TRUE" ]]; then
+            send_mail "${SUBJECT_FAILURE}" "$2"
+        fi
+        # ping
+        send_ping "failure" "${SUBJECT_FAILURE}" "$2"
+        send_ping "completion" "${SUBJECT_FAILURE}" "$2"
+        ;;
     esac
 }
 
@@ -199,10 +198,8 @@ function send_notification() {
 #     None
 ########################################
 function configure_postgresql() {
-    if [[ "${DB_TYPE}" == "POSTGRESQL" ]]; then
-        echo "${PG_HOST}:${PG_PORT}:${PG_DBNAME}:${PG_USERNAME}:${PG_PASSWORD}" > ~/.pgpass
-        chmod 0600 ~/.pgpass
-    fi
+    echo "${PG_HOST}:${PG_PORT}:${PG_DBNAME}:${PG_USERNAME}:${PG_PASSWORD}" >~/.pgpass
+    chmod 0600 ~/.pgpass
 }
 
 ########################################
@@ -300,7 +297,7 @@ function init_env() {
     export_env_file
 
     init_env_dir
-    init_env_db
+    # init_env_db
     init_env_display
     init_env_ping
     init_env_mail
@@ -326,26 +323,6 @@ function init_env() {
     get_env RCLONE_GLOBAL_FLAG
     RCLONE_GLOBAL_FLAG="${RCLONE_GLOBAL_FLAG:-""}"
 
-    # ZIP_ENABLE
-    get_env ZIP_ENABLE
-    if [[ "${ZIP_ENABLE^^}" == "FALSE" ]]; then
-        ZIP_ENABLE="FALSE"
-    else
-        ZIP_ENABLE="TRUE"
-    fi
-
-    # ZIP_PASSWORD
-    get_env ZIP_PASSWORD
-    ZIP_PASSWORD="${ZIP_PASSWORD:-"WHEREISMYPASSWORD?"}"
-
-    # ZIP_TYPE
-    get_env ZIP_TYPE
-    if [[ "${ZIP_TYPE,,}" == "7z" ]]; then
-        ZIP_TYPE="7z"
-    else
-        ZIP_TYPE="zip"
-    fi
-
     # BACKUP_KEEP_DAYS
     get_env BACKUP_KEEP_DAYS
     BACKUP_KEEP_DAYS="${BACKUP_KEEP_DAYS:-"0"}"
@@ -359,40 +336,21 @@ function init_env() {
 
     # TIMEZONE
     get_env TIMEZONE
-    local TIMEZONE_MATCHED_COUNT=$(ls "/usr/share/zoneinfo/${TIMEZONE}" 2> /dev/null | wc -l)
+    local TIMEZONE_MATCHED_COUNT=$(ls "/usr/share/zoneinfo/${TIMEZONE}" 2>/dev/null | wc -l)
     if [[ "${TIMEZONE_MATCHED_COUNT}" -ne 1 ]]; then
         TIMEZONE="UTC"
     fi
 
     color yellow "========================================"
-    color yellow "DATA_DIR: ${DATA_DIR}"
-    color yellow "DATA_CONFIG: ${DATA_CONFIG}"
-    color yellow "DATA_RSAKEY: ${DATA_RSAKEY}"
-    color yellow "DATA_ATTACHMENTS: ${DATA_ATTACHMENTS}"
-    color yellow "DATA_SENDS: ${DATA_SENDS}"
-    color yellow "========================================"
-    color yellow "DB_TYPE: ${DB_TYPE}"
-
-    if [[ "${DB_TYPE}" == "POSTGRESQL" ]]; then
-        color yellow "DB_URL: postgresql://${PG_USERNAME}:***(${#PG_PASSWORD} Chars)@${PG_HOST}:${PG_PORT}/${PG_DBNAME}"
-    elif [[ "${DB_TYPE}" == "MYSQL" ]]; then
-        color yellow "DB_URL: mysql://${MYSQL_USERNAME}:***(${#MYSQL_PASSWORD} Chars)@${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DATABASE}"
-    else
-        color yellow "DATA_DB: ${DATA_DB}"
-    fi
-
+    color yellow "SOURCE_DIR: ${SOURCE_DIR}"
     color yellow "========================================"
     color yellow "CRON: ${CRON}"
 
-    for RCLONE_REMOTE_X in "${RCLONE_REMOTE_LIST[@]}"
-    do
+    for RCLONE_REMOTE_X in "${RCLONE_REMOTE_LIST[@]}"; do
         color yellow "RCLONE_REMOTE: ${RCLONE_REMOTE_X}"
     done
 
     color yellow "RCLONE_GLOBAL_FLAG: ${RCLONE_GLOBAL_FLAG}"
-    color yellow "ZIP_ENABLE: ${ZIP_ENABLE}"
-    color yellow "ZIP_PASSWORD: ${#ZIP_PASSWORD} Chars"
-    color yellow "ZIP_TYPE: ${ZIP_TYPE}"
     color yellow "BACKUP_FILE_DATE_FORMAT: ${BACKUP_FILE_DATE_FORMAT} (example \"[filename].$(date +"${BACKUP_FILE_DATE_FORMAT}").[ext]\")"
     color yellow "BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS}"
     if [[ -n "${PING_URL}" ]]; then
@@ -420,104 +378,36 @@ function init_env() {
 
 function init_env_dir() {
     # DATA_DIR
-    get_env DATA_DIR
-    DATA_DIR="${DATA_DIR:-"/bitwarden/data"}"
-    check_dir_exist "${DATA_DIR}"
-
-    # DATA_DB
-    get_env DATA_DB
-    DATA_DB="${DATA_DB:-"${DATA_DIR}/db.sqlite3"}"
-
-    # DATA_CONFIG
-    DATA_CONFIG="${DATA_DIR}/config.json"
-
-    # DATA_RSAKEY
-    get_env DATA_RSAKEY
-    DATA_RSAKEY="${DATA_RSAKEY:-"${DATA_DIR}/rsa_key"}"
-    DATA_RSAKEY_DIRNAME="$(dirname "${DATA_RSAKEY}")"
-    DATA_RSAKEY_BASENAME="$(basename "${DATA_RSAKEY}")"
-
-    # DATA_ATTACHMENTS
-    get_env DATA_ATTACHMENTS
-    DATA_ATTACHMENTS="$(dirname "${DATA_ATTACHMENTS:-"${DATA_DIR}/attachments"}/useless")"
-    DATA_ATTACHMENTS_DIRNAME="$(dirname "${DATA_ATTACHMENTS}")"
-    DATA_ATTACHMENTS_BASENAME="$(basename "${DATA_ATTACHMENTS}")"
-
-    # DATA_SEND
-    get_env DATA_SENDS
-    DATA_SENDS="$(dirname "${DATA_SENDS:-"${DATA_DIR}/sends"}/useless")"
-    DATA_SENDS_DIRNAME="$(dirname "${DATA_SENDS}")"
-    DATA_SENDS_BASENAME="$(basename "${DATA_SENDS}")"
+    get_env SOURCE_DIR
+    SOURCE_DIR="${SOURCE_DIR:-"/immich/data"}"
+    check_dir_exist "${SOURCE_DIR}"
 }
 
 function init_env_db() {
-    # DB_TYPE
-    get_env DB_TYPE
+    # PG_HOST
+    get_env PG_HOST
 
-    if [[ "${DB_TYPE^^}" == "POSTGRESQL" ]]; then # postgresql
-        DB_TYPE="POSTGRESQL"
+    # PG_PORT
+    get_env PG_PORT
+    PG_PORT="${PG_PORT:-"5432"}"
 
-        # PG_HOST
-        get_env PG_HOST
+    # PG_DBNAME
+    get_env PG_DBNAME
+    PG_DBNAME="${PG_DBNAME:-"vaultwarden"}"
 
-        # PG_PORT
-        get_env PG_PORT
-        PG_PORT="${PG_PORT:-"5432"}"
+    # PG_USERNAME
+    get_env PG_USERNAME
+    PG_USERNAME="${PG_USERNAME:-"vaultwarden"}"
 
-        # PG_DBNAME
-        get_env PG_DBNAME
-        PG_DBNAME="${PG_DBNAME:-"vaultwarden"}"
+    # PG_PASSWORD
+    get_env PG_PASSWORD
 
-        # PG_USERNAME
-        get_env PG_USERNAME
-        PG_USERNAME="${PG_USERNAME:-"vaultwarden"}"
-
-        # PG_PASSWORD
-        get_env PG_PASSWORD
-    elif [[ "${DB_TYPE^^}" == "MYSQL" ]]; then # mysql
-        DB_TYPE="MYSQL"
-
-        # MYSQL_HOST
-        get_env MYSQL_HOST
-
-        # MYSQL_PORT
-        get_env MYSQL_PORT
-        MYSQL_PORT="${MYSQL_PORT:-"3306"}"
-
-        # MYSQL_DATABASE
-        get_env MYSQL_DATABASE
-        MYSQL_DATABASE="${MYSQL_DATABASE:-"vaultwarden"}"
-
-        # MYSQL_USERNAME
-        get_env MYSQL_USERNAME
-        MYSQL_USERNAME="${MYSQL_USERNAME:-"vaultwarden"}"
-
-        # MYSQL_PASSWORD
-        get_env MYSQL_PASSWORD
-
-        # MYSQL_SSL
-        get_env MYSQL_SSL
-
-        # MYSQL_SSL_VERIFY_SERVER_CERT
-        get_env MYSQL_SSL_VERIFY_SERVER_CERT
-
-        # MYSQL_SSL_CA
-        get_env MYSQL_SSL_CA
-
-        # MYSQL_SSL_CERT
-        get_env MYSQL_SSL_CERT
-
-        # MYSQL_SSL_KEY
-        get_env MYSQL_SSL_KEY
-    else # sqlite
-        DB_TYPE="SQLITE"
-    fi
 }
 
 function init_env_display() {
     # DISPLAY_NAME
     get_env DISPLAY_NAME
-    DISPLAY_NAME="${DISPLAY_NAME:-"vaultwarden"}"
+    DISPLAY_NAME="${DISPLAY_NAME:-"immich"}"
 }
 
 function init_env_ping() {

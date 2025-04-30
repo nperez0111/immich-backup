@@ -1,10 +1,13 @@
 #!/bin/bash
 
+# TODO Remove this
+docker build -t ttionya/vaultwarden-backup:test .
 
 DOCKER_IMAGE="ttionya/vaultwarden-backup:test"
 ERROR_NUM=0
 
-DATA_DIR="$(pwd)/tests/fixtures/source/bitwarden/data"
+SOURCE_DIR="$(pwd)/tests/fixtures/source/immich/data"
+RCLONE_CONFIG_DIR="$(pwd)/tests/fixtures/source/config"
 OUTPUT_DIR="output"
 EXTRACT_DIR="extract"
 REMOTE_DIR="/${OUTPUT_DIR}"
@@ -19,11 +22,11 @@ REMOTE_DIR="/${OUTPUT_DIR}"
 ########################################
 function color() {
     case $1 in
-        red)     echo -e "\033[31m$2\033[0m" ;;
-        green)   echo -e "\033[32m$2\033[0m" ;;
-        yellow)  echo -e "\033[33m$2\033[0m" ;;
-        blue)    echo -e "\033[34m$2\033[0m" ;;
-        none)    echo "$2" ;;
+    red) echo -e "\033[31m$2\033[0m" ;;
+    green) echo -e "\033[32m$2\033[0m" ;;
+    yellow) echo -e "\033[33m$2\033[0m" ;;
+    blue) echo -e "\033[34m$2\033[0m" ;;
+    none) echo "$2" ;;
     esac
 }
 
@@ -39,7 +42,7 @@ function color() {
 ########################################
 function check_files_same_in_folders() {
     function generate_hash_list() {
-        find "$1" -type f -not -name "db.*" -exec sha1sum {} \; | sort | sed "s|$1||g" > "$2"
+        find "$1" -type f -not -name "db.*" -exec sha1sum {} \; | sort | sed "s|$1||g" >"$2"
     }
 
     color blue "Calculating file hash in folder \"$1\" and \"$2\""
@@ -55,7 +58,7 @@ function check_files_same_in_folders() {
 
     local RETURN_CODE
     local FOLDER_HASH_DIFF="/tmp/folder_hash_diff"
-    if diff "${FOLDER1_HASH_LIST}" "${FOLDER2_HASH_LIST}" > "${FOLDER_HASH_DIFF}"; then
+    if diff "${FOLDER1_HASH_LIST}" "${FOLDER2_HASH_LIST}" >"${FOLDER_HASH_DIFF}"; then
         RETURN_CODE=0
     else
         RETURN_CODE=1
@@ -86,8 +89,6 @@ function test_result() {
     color red "Test case \"$1\" failed"
 }
 
-. tests/units/backup-zip-file/test.sh
-. tests/units/backup-7z-file/test.sh
 . tests/units/backup-unpackage/test.sh
 
 if [[ "${ERROR_NUM}" == "0" ]]; then
