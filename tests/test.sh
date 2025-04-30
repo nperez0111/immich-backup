@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # TODO Remove this
-docker build -t ttionya/vaultwarden-backup:test .
+docker build -t nperez0111/immich-backup:test .
 
-DOCKER_IMAGE="ttionya/vaultwarden-backup:test"
+DOCKER_IMAGE="nperez0111/immich-backup:test"
 ERROR_NUM=0
 
 SOURCE_DIR="$(pwd)/tests/fixtures/source/immich/data"

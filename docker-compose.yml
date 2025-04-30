@@ -1,7 +1,6 @@
-version: '3.4'
+version: "3.4"
 
 services:
-
   vaultwarden:
     image: vaultwarden/server:latest
     restart: always
@@ -9,12 +8,12 @@ services:
     #   SIGNUPS_ALLOWED: 'false'
     #   ADMIN_TOKEN: 'your authentication token'
     ports:
-      - '127.0.0.1:8200:80'
+      - "127.0.0.1:8200:80"
     volumes:
       - vaultwarden-data:/data/
 
   backup:
-    image: ttionya/vaultwarden-backup:latest
+    image: nperez0111/immich-backup:latest
     restart: always
     # environment:
     #   RCLONE_REMOTE_NAME: 'BitwardenBackup'

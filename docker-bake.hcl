@@ -25,12 +25,10 @@ target "_common_multi_platforms" {
 
 target "_common_tags" {
   tags = [
-    "ttionya/vaultwarden-backup:latest",
-    "ttionya/vaultwarden-backup:${VERSION}",
-    "ttionya/bitwardenrs-backup:latest",
-    "ttionya/bitwardenrs-backup:${VERSION}",
-    "ghcr.io/ttionya/vaultwarden-backup:latest",
-    "ghcr.io/ttionya/vaultwarden-backup:${VERSION}"
+    "nperez0111/immich-backup:latest",
+    "nperez0111/immich-backup:${VERSION}",
+    "ghcr.io/nperez0111/immich-backup:latest",
+    "ghcr.io/nperez0111/immich-backup:${VERSION}"
   ]
 }
 
@@ -45,7 +43,7 @@ target "image-schedule" {
 target "image-beta" {
   inherits = ["_common", "_common_multi_platforms"]
   tags = [
-    "ttionya/vaultwarden-backup:${VERSION}"
+    "nperez0111/immich-backup:${VERSION}"
   ]
 }
 
@@ -63,6 +61,6 @@ target "image-test" {
     base = "docker-image://${TEST_BASE_TAG}"
   }
   tags = [
-    "ttionya/vaultwarden-backup:test"
+    "nperez0111/immich-backup:test"
   ]
 }
