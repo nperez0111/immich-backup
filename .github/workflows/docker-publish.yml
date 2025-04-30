@@ -6,6 +6,7 @@ on:
       - "v*.*.*"
   schedule:
     - cron: "0 0 10,20,30 * *"
+  workflow_dispatch:
 
 permissions:
   packages: write
