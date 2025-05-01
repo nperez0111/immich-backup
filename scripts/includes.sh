@@ -2,9 +2,6 @@
 
 ENV_FILE="/.env"
 CRON_CONFIG_FILE="${HOME}/crontabs"
-BACKUP_DIR="/immich/backup"
-RESTORE_DIR="/immich/restore"
-RESTORE_EXTRACT_DIR="/immich/extract"
 
 #################### Function ####################
 ########################################
@@ -170,6 +167,7 @@ function send_notification() {
     start)
         # ping
         send_ping "start" "${SUBJECT_START}" "$2"
+        echo $SUBJECT_START
         ;;
     success)
         # mail
@@ -179,6 +177,7 @@ function send_notification() {
         # ping
         send_ping "success" "${SUBJECT_SUCCESS}" "$2"
         send_ping "completion" "${SUBJECT_SUCCESS}" "$2"
+        echo $SUBJECT_SUCCESS
         ;;
     failure)
         # mail
@@ -188,6 +187,7 @@ function send_notification() {
         # ping
         send_ping "failure" "${SUBJECT_FAILURE}" "$2"
         send_ping "completion" "${SUBJECT_FAILURE}" "$2"
+        echo $SUBJECT_FAILURE
         ;;
     esac
 }
@@ -308,12 +308,12 @@ function init_env() {
 
     # RCLONE_REMOTE_NAME
     get_env RCLONE_REMOTE_NAME
-    RCLONE_REMOTE_NAME="${RCLONE_REMOTE_NAME:-"BitwardenBackup"}"
+    RCLONE_REMOTE_NAME="${RCLONE_REMOTE_NAME:-"ImmichBackup"}"
     RCLONE_REMOTE_NAME_0="${RCLONE_REMOTE_NAME}"
 
     # RCLONE_REMOTE_DIR
     get_env RCLONE_REMOTE_DIR
-    RCLONE_REMOTE_DIR="${RCLONE_REMOTE_DIR:-"/BitwardenBackup/"}"
+    RCLONE_REMOTE_DIR="${RCLONE_REMOTE_DIR:-"/ImmichBackup/"}"
     RCLONE_REMOTE_DIR_0="${RCLONE_REMOTE_DIR}"
 
     # get RCLONE_REMOTE_LIST
@@ -322,17 +322,6 @@ function init_env() {
     # RCLONE_GLOBAL_FLAG
     get_env RCLONE_GLOBAL_FLAG
     RCLONE_GLOBAL_FLAG="${RCLONE_GLOBAL_FLAG:-""}"
-
-    # BACKUP_KEEP_DAYS
-    get_env BACKUP_KEEP_DAYS
-    BACKUP_KEEP_DAYS="${BACKUP_KEEP_DAYS:-"0"}"
-
-    # BACKUP_FILE_DATE_FORMAT
-    get_env BACKUP_FILE_SUFFIX
-    get_env BACKUP_FILE_DATE
-    get_env BACKUP_FILE_DATE_SUFFIX
-    BACKUP_FILE_DATE="$(echo "${BACKUP_FILE_DATE:-"%Y%m%d"}${BACKUP_FILE_DATE_SUFFIX}" | sed 's/[^0-9a-zA-Z%_-]//g')"
-    BACKUP_FILE_DATE_FORMAT="$(echo "${BACKUP_FILE_SUFFIX:-"${BACKUP_FILE_DATE}"}" | sed 's/\///g')"
 
     # TIMEZONE
     get_env TIMEZONE
@@ -351,8 +340,7 @@ function init_env() {
     done
 
     color yellow "RCLONE_GLOBAL_FLAG: ${RCLONE_GLOBAL_FLAG}"
-    color yellow "BACKUP_FILE_DATE_FORMAT: ${BACKUP_FILE_DATE_FORMAT} (example \"[filename].$(date +"${BACKUP_FILE_DATE_FORMAT}").[ext]\")"
-    color yellow "BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS}"
+
     if [[ -n "${PING_URL}" ]]; then
         color yellow "PING_URL: curl${PING_URL_CURL_OPTIONS:+" ${PING_URL_CURL_OPTIONS}"} \"${PING_URL}\""
     fi
